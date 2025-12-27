@@ -62,39 +62,30 @@ enum BrowserEngine: Sendable {
     case firefox
 }
 
-/// Ordered list of browsers to try when importing cookies.
-public enum BrowserCookieImportOrder: Sendable {
-    case safariChromeFirefox
+/// Defaults for browser selection.
+public enum BrowserCookieDefaults {
+    /// Preferred order to search for cookies when no user preference exists.
+    public static let importOrder: [Browser] = [.safari, .chrome, .firefox]
+}
 
-    public var browsers: [Browser] {
-        switch self {
-        case .safariChromeFirefox:
-            [.safari, .chrome, .firefox]
-        }
-    }
-
+public extension Collection where Element == Browser {
     /// Human-readable label for settings UI.
-    public var displayLabel: String {
-        switch self {
-        case .safariChromeFirefox:
-            "Safari → Chrome → Firefox"
-        }
+    var displayLabel: String {
+        map(\.displayName).joined(separator: " \u{2192} ")
     }
 
     /// Short label for compact UI.
-    public var shortLabel: String {
-        switch self {
-        case .safariChromeFirefox:
-            "Safari/Chrome/Firefox"
-        }
+    var shortLabel: String {
+        map(\.displayName).joined(separator: "/")
     }
 
     /// Hint for user-facing login prompts.
-    public var loginHint: String {
-        switch self {
-        case .safariChromeFirefox:
-            "Safari, Chrome, or Firefox"
-        }
+    var loginHint: String {
+        let names = map(\.displayName)
+        guard let last = names.last else { return "browser" }
+        if names.count == 1 { return last }
+        if names.count == 2 { return "\(names[0]) or \(last)" }
+        return "\(names.dropLast().joined(separator: ", ")), or \(last)"
     }
 }
 

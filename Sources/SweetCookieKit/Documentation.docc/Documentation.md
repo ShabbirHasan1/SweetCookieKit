@@ -35,7 +35,7 @@ let cookies = try client.cookies(matching: query, in: stores.first!)
 ### Browser selection
 
 - ``Browser``
-- ``BrowserCookieImportOrder``
+- ``BrowserCookieDefaults``
 - ``BrowserProfile``
 - ``BrowserCookieStore``
 - ``BrowserCookieStoreKind``

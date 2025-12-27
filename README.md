@@ -60,11 +60,20 @@ let query = BrowserCookieQuery(
 ### Pick a browser order
 
 ```swift
-let order = BrowserCookieImportOrder.safariChromeFirefox
-for browser in order.browsers {
+let order = BrowserCookieDefaults.importOrder
+for browser in order {
     let results = try client.records(matching: query, in: browser)
     // results are grouped per profile/store
 }
+```
+
+## Example CLI
+
+See `Examples/CookieCLI` for a standalone SwiftPM executable that lists stores and exports cookies as JSON or HTTP headers.
+
+```bash
+cd Examples/CookieCLI
+swift run SweetCookieCLI --help
 ```
 
 ## Notes
