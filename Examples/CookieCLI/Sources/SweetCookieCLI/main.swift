@@ -186,7 +186,7 @@ enum SweetCookieCLI {
             return Browser.allCases
         }
         if options.browserTokens.isEmpty {
-            return BrowserCookieDefaults.importOrder
+            return Browser.defaultImportOrder
         }
         var seen = Set<Browser>()
         var resolved: [Browser] = []

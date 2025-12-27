@@ -44,6 +44,9 @@ public enum Browser: String, Sendable, Hashable, CaseIterable {
         }
     }
 
+    /// Preferred order to search for cookies when no user preference exists.
+    public static let defaultImportOrder: [Browser] = [.safari, .chrome, .firefox]
+
     var engine: BrowserEngine {
         switch self {
         case .safari:
@@ -65,7 +68,7 @@ enum BrowserEngine: Sendable {
 /// Defaults for browser selection.
 public enum BrowserCookieDefaults {
     /// Preferred order to search for cookies when no user preference exists.
-    public static let importOrder: [Browser] = [.safari, .chrome, .firefox]
+    public static let importOrder: [Browser] = Browser.defaultImportOrder
 }
 
 public extension Collection where Element == Browser {
@@ -131,7 +134,7 @@ public struct BrowserCookieQuery: Sendable {
     public var referenceDate: Date
 
     public init(
-        domains: [String],
+        domains: [String] = [],
         domainMatch: BrowserCookieDomainMatch = .contains,
         origin: BrowserCookieOriginStrategy = .domainBased,
         includeExpired: Bool = false,
@@ -317,6 +320,16 @@ public struct BrowserCookieClient: Sendable {
         browsers.flatMap { self.stores(for: $0) }
     }
 
+    /// Loads cookie records from multiple browsers.
+    /// - Returns: Records grouped per browser profile/store.
+    public func records(
+        matching query: BrowserCookieQuery,
+        in browsers: [Browser],
+        logger: ((String) -> Void)? = nil) throws -> [BrowserCookieStoreRecords]
+    {
+        try browsers.flatMap { try self.records(matching: query, in: $0, logger: logger) }
+    }
+
     /// Loads cookie records from a specific browser.
     /// - Returns: Records grouped per browser profile/store.
     public func records(
@@ -431,6 +444,26 @@ public struct BrowserCookieClient: Sendable {
     {
         let records = try self.records(matching: query, in: store, logger: logger)
         return Self.makeHTTPCookies(records, origin: query.origin)
+    }
+
+    /// Loads `HTTPCookie` values from multiple browser stores.
+    public func cookies(
+        matching query: BrowserCookieQuery,
+        in browser: Browser,
+        logger: ((String) -> Void)? = nil) throws -> [HTTPCookie]
+    {
+        let sources = try self.records(matching: query, in: browser, logger: logger)
+        return sources.flatMap { $0.cookies(origin: query.origin) }
+    }
+
+    /// Loads `HTTPCookie` values from multiple browsers.
+    public func cookies(
+        matching query: BrowserCookieQuery,
+        in browsers: [Browser],
+        logger: ((String) -> Void)? = nil) throws -> [HTTPCookie]
+    {
+        let sources = try self.records(matching: query, in: browsers, logger: logger)
+        return sources.flatMap { $0.cookies(origin: query.origin) }
     }
 
     /// Convert cookie records into `HTTPCookie` values.

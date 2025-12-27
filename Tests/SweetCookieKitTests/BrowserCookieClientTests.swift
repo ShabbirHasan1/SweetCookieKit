@@ -30,11 +30,19 @@ struct BrowserCookieClientTests {
 
     @Test
     func browserCookieImportOrder_labels() {
-        let order = BrowserCookieDefaults.importOrder
+        let order = Browser.defaultImportOrder
         #expect(order == [.safari, .chrome, .firefox])
         #expect(order.displayLabel == "Safari → Chrome → Firefox")
         #expect(order.shortLabel == "Safari/Chrome/Firefox")
         #expect(order.loginHint == "Safari, Chrome, or Firefox")
+    }
+
+    @Test
+    func browserCookieQuery_defaults() {
+        let query = BrowserCookieQuery()
+        #expect(query.domains.isEmpty)
+        #expect(query.domainMatch == .contains)
+        #expect(query.includeExpired == false)
     }
 }
 
