@@ -71,19 +71,19 @@ public enum BrowserCookieDefaults {
     public static let importOrder: [Browser] = Browser.defaultImportOrder
 }
 
-public extension Collection where Element == Browser {
+extension Collection<Browser> {
     /// Human-readable label for settings UI.
-    var displayLabel: String {
+    public var displayLabel: String {
         map(\.displayName).joined(separator: " \u{2192} ")
     }
 
     /// Short label for compact UI.
-    var shortLabel: String {
+    public var shortLabel: String {
         map(\.displayName).joined(separator: "/")
     }
 
     /// Hint for user-facing login prompts.
-    var loginHint: String {
+    public var loginHint: String {
         let names = map(\.displayName)
         guard let last = names.last else { return "browser" }
         if names.count == 1 { return last }

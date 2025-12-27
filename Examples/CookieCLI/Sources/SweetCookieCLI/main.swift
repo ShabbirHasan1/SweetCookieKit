@@ -7,9 +7,9 @@ import SweetCookieKit
 enum SweetCookieCLI {
     static func main() {
         do {
-            try run()
+            try self.run()
         } catch {
-            log("error: \(error.localizedDescription)")
+            self.log("error: \(error.localizedDescription)")
             exit(1)
         }
     }
@@ -17,12 +17,12 @@ enum SweetCookieCLI {
     private static func run() throws {
         let options = try Options.parse(CommandLine.arguments)
         if options.showHelp {
-            printHelp()
+            self.printHelp()
             return
         }
 
         if options.listBrowsers {
-            listBrowsers()
+            self.listBrowsers()
             return
         }
 
@@ -30,7 +30,7 @@ enum SweetCookieCLI {
         let client = BrowserCookieClient()
 
         if options.listStores {
-            listStores(client: client, browsers: browsers, options: options)
+            self.listStores(client: client, browsers: browsers, options: options)
             return
         }
 
@@ -40,17 +40,17 @@ enum SweetCookieCLI {
             domainMatch: options.domainMatch,
             includeExpired: options.includeExpired)
 
-        let stores = selectedStores(client: client, browsers: browsers, options: options)
-        let storeRecords = loadRecords(client: client, stores: stores, query: query)
+        let stores = self.selectedStores(client: client, browsers: browsers, options: options)
+        let storeRecords = self.loadRecords(client: client, stores: stores, query: query)
 
         // Render selected output format.
         switch options.format {
         case .json:
-            try writeJSON(stores: storeRecords)
+            try self.writeJSON(stores: storeRecords)
         case .lines:
-            writeLines(stores: storeRecords)
+            self.writeLines(stores: storeRecords)
         case .cookieHeader:
-            writeCookieHeaders(stores: storeRecords)
+            self.writeCookieHeaders(stores: storeRecords)
         }
     }
 
@@ -65,13 +65,14 @@ enum SweetCookieCLI {
         browsers: [Browser],
         options: Options)
     {
-        let stores = selectedStores(client: client, browsers: browsers, options: options)
+        let stores = self.selectedStores(client: client, browsers: browsers, options: options)
         if stores.isEmpty {
-            log("warning: no stores found for selection")
+            self.log("warning: no stores found for selection")
             return
         }
         for store in stores {
-            print("\(store.browser.rawValue)\t\(store.profile.name)\t\(store.profile.id)\t\(store.kind.rawValue)\t\(store.label)")
+            print(
+                "\(store.browser.rawValue)\t\(store.profile.name)\t\(store.profile.id)\t\(store.kind.rawValue)\t\(store.label)")
         }
     }
 
@@ -93,7 +94,7 @@ enum SweetCookieCLI {
             for browser in browsers {
                 let available = client.stores(for: browser)
                 if available.isEmpty {
-                    log("warning: no stores for \(browser.displayName)")
+                    self.log("warning: no stores for \(browser.displayName)")
                 }
             }
         }
@@ -111,11 +112,11 @@ enum SweetCookieCLI {
         for store in stores {
             do {
                 let records = try client.records(matching: query, in: store) {
-                    log($0)
+                    self.log($0)
                 }
                 results.append(BrowserCookieStoreRecords(store: store, records: records))
             } catch {
-                log("warning: \(store.browser.displayName) \(store.label): \(error.localizedDescription)")
+                self.log("warning: \(store.browser.displayName) \(store.label): \(error.localizedDescription)")
             }
         }
         return results
@@ -163,7 +164,8 @@ enum SweetCookieCLI {
             print("# \(store.store.browser.displayName) - \(store.store.profile.name) [\(store.store.kind.rawValue)]")
             for record in store.records {
                 let expires = record.expires.map { formatter.string(from: $0) } ?? ""
-                print("\(record.domain)\t\(record.name)\t\(record.value)\t\(record.path)\t\(expires)\t\(record.isSecure)\t\(record.isHTTPOnly)")
+                print(
+                    "\(record.domain)\t\(record.name)\t\(record.value)\t\(record.path)\t\(expires)\t\(record.isSecure)\t\(record.isHTTPOnly)")
             }
         }
     }
@@ -237,8 +239,7 @@ enum SweetCookieCLI {
               SweetCookieCLI --domain example.com --format cookie-header
               SweetCookieCLI --list-browsers
               SweetCookieCLI --list-stores --browser safari
-            """
-        )
+            """)
     }
 
     private static func log(_ message: String) {
