@@ -2,286 +2,16 @@ import Foundation
 
 #if os(macOS)
 
-/// Supported browsers for cookie extraction on macOS.
-public enum Browser: String, Sendable, Hashable, CaseIterable {
-    case safari
-    case chrome
-    case chromeBeta
-    case chromeCanary
-    case arc
-    case arcBeta
-    case arcCanary
-    case chatgptAtlas
-    case chromium
-    case firefox
-    case brave
-    case braveBeta
-    case braveNightly
-    case edge
-    case edgeBeta
-    case edgeCanary
-    case vivaldi
-
-    public var displayName: String {
-        switch self {
-        case .safari: "Safari"
-        case .chrome: "Chrome"
-        case .chromeBeta: "Chrome Beta"
-        case .chromeCanary: "Chrome Canary"
-        case .arc: "Arc"
-        case .arcBeta: "Arc Beta"
-        case .arcCanary: "Arc Canary"
-        case .chatgptAtlas: "ChatGPT Atlas"
-        case .chromium: "Chromium"
-        case .firefox: "Firefox"
-        case .brave: "Brave"
-        case .braveBeta: "Brave Beta"
-        case .braveNightly: "Brave Nightly"
-        case .edge: "Microsoft Edge"
-        case .edgeBeta: "Microsoft Edge Beta"
-        case .edgeCanary: "Microsoft Edge Canary"
-        case .vivaldi: "Vivaldi"
-        }
-    }
-
-    /// Preferred order to search for cookies when no user preference exists.
-    public static let defaultImportOrder: [Browser] = [.safari, .chrome, .firefox]
-
-    var engine: BrowserEngine {
-        switch self {
-        case .safari:
-            .webkit
-        case .firefox:
-            .firefox
-        default:
-            .chromium
-        }
-    }
-}
-
-enum BrowserEngine: Sendable {
-    case webkit
-    case chromium
-    case firefox
-}
-
-/// Defaults for browser selection.
-public enum BrowserCookieDefaults {
-    /// Preferred order to search for cookies when no user preference exists.
-    public static let importOrder: [Browser] = Browser.defaultImportOrder
-}
-
-extension Collection<Browser> {
-    /// Human-readable label for settings UI.
-    public var displayLabel: String {
-        map(\.displayName).joined(separator: " \u{2192} ")
-    }
-
-    /// Short label for compact UI.
-    public var shortLabel: String {
-        map(\.displayName).joined(separator: "/")
-    }
-
-    /// Hint for user-facing login prompts.
-    public var loginHint: String {
-        let names = map(\.displayName)
-        guard let last = names.last else { return "browser" }
-        if names.count == 1 { return last }
-        if names.count == 2 { return "\(names[0]) or \(last)" }
-        return "\(names.dropLast().joined(separator: ", ")), or \(last)"
-    }
-}
-
-/// Domain matching strategy for cookie queries.
-public enum BrowserCookieDomainMatch: Sendable {
-    case contains
-    case suffix
-    case exact
-}
-
-/// Maps a cookie domain to an origin URL when building `HTTPCookie` values.
-public enum BrowserCookieOriginStrategy: Sendable {
-    /// Use `https://{domain}`.
-    case domainBased
-    /// Always use the provided origin URL.
-    case fixed(URL)
-    /// Custom resolver that maps domain → origin URL.
-    case custom(@Sendable (String) -> URL?)
-
-    func resolve(domain: String) -> URL? {
-        switch self {
-        case .domainBased:
-            URL(string: "https://\(domain)")
-        case let .fixed(url):
-            url
-        case let .custom(resolver):
-            resolver(domain)
-        }
-    }
-}
-
-/// Query definition for fetching browser cookies.
-public struct BrowserCookieQuery: Sendable {
-    /// Domain patterns to match (empty = no filtering).
-    public var domains: [String]
-    /// Matching strategy for domains.
-    public var domainMatch: BrowserCookieDomainMatch
-    /// Origin URL resolver for building `HTTPCookie` values.
-    public var origin: BrowserCookieOriginStrategy
-    /// Include expired cookies when true.
-    public var includeExpired: Bool
-    /// Reference date used to filter expired cookies.
-    public var referenceDate: Date
-
-    public init(
-        domains: [String] = [],
-        domainMatch: BrowserCookieDomainMatch = .contains,
-        origin: BrowserCookieOriginStrategy = .domainBased,
-        includeExpired: Bool = false,
-        referenceDate: Date = Date())
-    {
-        self.domains = domains
-        self.domainMatch = domainMatch
-        self.origin = origin
-        self.includeExpired = includeExpired
-        self.referenceDate = referenceDate
-    }
-}
-
-/// A browser profile identifier.
-public struct BrowserProfile: Sendable, Hashable {
-    public let id: String
-    public let name: String
-
-    public init(id: String, name: String) {
-        self.id = id
-        self.name = name
-    }
-}
-
-/// Which cookie store a browser profile represents.
-public enum BrowserCookieStoreKind: String, Sendable {
-    case primary
-    case network
-    case safari
-}
-
-/// A concrete cookie store for a browser profile.
-public struct BrowserCookieStore: Sendable, Hashable {
-    /// Browser family and distribution.
-    public let browser: Browser
-    /// Browser profile metadata.
-    public let profile: BrowserProfile
-    /// Cookie store kind (e.g., primary vs network).
-    public let kind: BrowserCookieStoreKind
-    /// Human-readable label for UI or logs.
-    public let label: String
-    /// Backing cookie database URL when applicable.
-    public let databaseURL: URL?
-
-    public init(
-        browser: Browser,
-        profile: BrowserProfile,
-        kind: BrowserCookieStoreKind,
-        label: String,
-        databaseURL: URL?)
-    {
-        self.browser = browser
-        self.profile = profile
-        self.kind = kind
-        self.label = label
-        self.databaseURL = databaseURL
-    }
-}
-
-/// A browser cookie record normalized for cross-browser handling.
-public struct BrowserCookieRecord: Sendable {
-    public let domain: String
-    public let name: String
-    public let path: String
-    public let value: String
-    public let expires: Date?
-    public let isSecure: Bool
-    public let isHTTPOnly: Bool
-
-    public init(
-        domain: String,
-        name: String,
-        path: String,
-        value: String,
-        expires: Date?,
-        isSecure: Bool,
-        isHTTPOnly: Bool)
-    {
-        self.domain = domain
-        self.name = name
-        self.path = path
-        self.value = value
-        self.expires = expires
-        self.isSecure = isSecure
-        self.isHTTPOnly = isHTTPOnly
-    }
-}
-
-/// Cookie records loaded from a specific browser store.
-public struct BrowserCookieStoreRecords: Sendable {
-    /// Cookie store that produced these records.
-    public let store: BrowserCookieStore
-    /// Cookie records from the store.
-    public let records: [BrowserCookieRecord]
-
-    public init(store: BrowserCookieStore, records: [BrowserCookieRecord]) {
-        self.store = store
-        self.records = records
-    }
-
-    public var label: String {
-        self.store.label
-    }
-
-    public var browser: Browser {
-        self.store.browser
-    }
-
-    public func cookies(origin: BrowserCookieOriginStrategy = .domainBased) -> [HTTPCookie] {
-        BrowserCookieClient.makeHTTPCookies(self.records, origin: origin)
-    }
-}
-
-/// Errors raised when reading browser cookies.
-public enum BrowserCookieError: LocalizedError, Sendable {
-    case notFound(browser: Browser, details: String)
-    case accessDenied(browser: Browser, details: String)
-    case loadFailed(browser: Browser, details: String)
-
-    public var errorDescription: String? {
-        switch self {
-        case let .notFound(_, details), let .accessDenied(_, details), let .loadFailed(_, details):
-            details
-        }
-    }
-
-    public var browser: Browser {
-        switch self {
-        case let .notFound(browser, _), let .accessDenied(browser, _), let .loadFailed(browser, _):
-            browser
-        }
-    }
-
-    /// Optional guidance for user-facing permission errors.
-    public var accessDeniedHint: String? {
-        switch self {
-        case let .accessDenied(_, details):
-            details
-        case .notFound, .loadFailed:
-            nil
-        }
-    }
-}
-
 /// High-level API for enumerating and reading browser cookies.
+///
+/// This API is best-effort: browsers can change formats, cookies may be locked by a running process,
+/// and macOS privacy controls (Full Disk Access / Keychain prompts) can block reads.
 public struct BrowserCookieClient: Sendable {
+    /// Configuration for store discovery and cookie loading.
     public struct Configuration: Sendable {
+        /// Candidate home directories used to locate browser profile folders.
+        ///
+        /// Defaults to common sources such as `FileManager.default.homeDirectoryForCurrentUser` and `$HOME`.
         public var homeDirectories: [URL]
 
         public init(homeDirectories: [URL] = BrowserCookieClient.defaultHomeDirectories()) {
@@ -289,13 +19,17 @@ public struct BrowserCookieClient: Sendable {
         }
     }
 
+    /// Current configuration used by the client.
     public let configuration: Configuration
 
+    /// Creates a cookie client.
     public init(configuration: Configuration = Configuration()) {
         self.configuration = configuration
     }
 
     /// Returns cookie stores for a specific browser (profile + store kind).
+    /// - Parameter browser: Browser to enumerate.
+    /// - Returns: Stores for the browser (often one per profile).
     public func stores(for browser: Browser) -> [BrowserCookieStore] {
         switch browser.engine {
         case .webkit:
@@ -316,11 +50,16 @@ public struct BrowserCookieClient: Sendable {
     }
 
     /// Returns cookie stores for multiple browsers.
+    /// - Parameter browsers: Browsers to enumerate.
     public func stores(in browsers: [Browser]) -> [BrowserCookieStore] {
         browsers.flatMap { self.stores(for: $0) }
     }
 
     /// Loads cookie records from multiple browsers.
+    /// - Parameters:
+    ///   - query: Filter for domains/expiry.
+    ///   - browsers: Browsers to load from.
+    ///   - logger: Optional logger for diagnostic messages (paths, failures, fallbacks).
     /// - Returns: Records grouped per browser profile/store.
     public func records(
         matching query: BrowserCookieQuery,
@@ -331,6 +70,10 @@ public struct BrowserCookieClient: Sendable {
     }
 
     /// Loads cookie records from a specific browser.
+    /// - Parameters:
+    ///   - query: Filter for domains/expiry.
+    ///   - browser: Browser to load from.
+    ///   - logger: Optional logger for diagnostic messages (paths, failures, fallbacks).
     /// - Returns: Records grouped per browser profile/store.
     public func records(
         matching query: BrowserCookieQuery,
@@ -351,6 +94,10 @@ public struct BrowserCookieClient: Sendable {
     }
 
     /// Loads cookie records from a specific cookie store.
+    /// - Parameters:
+    ///   - query: Filter for domains/expiry.
+    ///   - store: Cookie store to load from.
+    ///   - logger: Optional logger for diagnostic messages (paths, failures, fallbacks).
     public func records(
         matching query: BrowserCookieQuery,
         in store: BrowserCookieStore,
@@ -437,6 +184,11 @@ public struct BrowserCookieClient: Sendable {
     }
 
     /// Loads `HTTPCookie` values from a specific cookie store.
+    /// - Parameters:
+    ///   - query: Filter + conversion settings.
+    ///   - store: Cookie store to load from.
+    ///   - logger: Optional logger for diagnostic messages (paths, failures, fallbacks).
+    /// - Returns: `HTTPCookie` values converted from loaded records.
     public func cookies(
         matching query: BrowserCookieQuery,
         in store: BrowserCookieStore,
@@ -447,6 +199,10 @@ public struct BrowserCookieClient: Sendable {
     }
 
     /// Loads `HTTPCookie` values from multiple browser stores.
+    /// - Parameters:
+    ///   - query: Filter + conversion settings.
+    ///   - browser: Browser to load from.
+    ///   - logger: Optional logger for diagnostic messages (paths, failures, fallbacks).
     public func cookies(
         matching query: BrowserCookieQuery,
         in browser: Browser,
@@ -457,6 +213,10 @@ public struct BrowserCookieClient: Sendable {
     }
 
     /// Loads `HTTPCookie` values from multiple browsers.
+    /// - Parameters:
+    ///   - query: Filter + conversion settings.
+    ///   - browsers: Browsers to load from.
+    ///   - logger: Optional logger for diagnostic messages (paths, failures, fallbacks).
     public func cookies(
         matching query: BrowserCookieQuery,
         in browsers: [Browser],
@@ -467,6 +227,10 @@ public struct BrowserCookieClient: Sendable {
     }
 
     /// Convert cookie records into `HTTPCookie` values.
+    /// - Parameters:
+    ///   - records: Normalized cookie records.
+    ///   - origin: Origin URL strategy used when building `HTTPCookie`.
+    /// - Returns: Best-effort `HTTPCookie` values (records with invalid domains are dropped).
     public static func makeHTTPCookies(
         _ records: [BrowserCookieRecord],
         origin: BrowserCookieOriginStrategy = .domainBased) -> [HTTPCookie]
@@ -494,6 +258,7 @@ public struct BrowserCookieClient: Sendable {
         }
     }
 
+    /// Default home directories used when searching for browser profiles.
     public static func defaultHomeDirectories() -> [URL] {
         var homes: [URL] = []
         homes.append(FileManager.default.homeDirectoryForCurrentUser)

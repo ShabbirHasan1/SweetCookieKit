@@ -9,6 +9,11 @@ Use it when you need to:
 - Filter by domain (contains/suffix/exact).
 - Convert results into `HTTPCookie` values for WebKit or `URLRequest`.
 
+## Permissions & prompts
+
+- Safari cookie access may require Full Disk Access.
+- Chromium imports can trigger a Keychain prompt for “Chrome Safe Storage”.
+
 ## Requirements
 
 - macOS 13+
@@ -29,6 +34,11 @@ let stores = client.stores(for: .chrome)
 let records = try client.records(matching: query, in: stores.first!)
 let cookies = try client.cookies(matching: query, in: stores.first!)
 ```
+
+## Errors
+
+Most failures surface as ``BrowserCookieError``. For example, missing cookie stores report `.notFound`,
+and permission issues report `.accessDenied` with a user-facing hint in ``BrowserCookieError/accessDeniedHint``.
 
 ## Topics
 
