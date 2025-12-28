@@ -49,10 +49,26 @@ public enum Browser: String, Sendable, Hashable, CaseIterable {
     }
 
     /// Preferred order to search for cookies when no user preference exists.
-    ///
-    /// This is intentionally conservative (Safari/Chrome/Firefox) so callers can opt into
-    /// broader searches explicitly.
-    public static let defaultImportOrder: [Browser] = [.safari, .chrome, .firefox]
+    /// Try all supported browsers by default; callers can pass a smaller list.
+    public static let defaultImportOrder: [Browser] = [
+        .safari,
+        .chrome,
+        .edge,
+        .brave,
+        .arc,
+        .chatgptAtlas,
+        .chromium,
+        .vivaldi,
+        .firefox,
+        .chromeBeta,
+        .chromeCanary,
+        .arcBeta,
+        .arcCanary,
+        .braveBeta,
+        .braveNightly,
+        .edgeBeta,
+        .edgeCanary,
+    ]
 
     var engine: BrowserEngine {
         switch self {
@@ -312,4 +328,3 @@ public enum BrowserCookieError: LocalizedError, Sendable {
 }
 
 #endif
-

@@ -62,7 +62,7 @@ let query = BrowserCookieQuery(
 ### Pick a browser order
 
 ```swift
-let order = Browser.defaultImportOrder // preferred order (Safari → Chrome → Firefox)
+let order = Browser.defaultImportOrder // tries all supported browsers by default
 for browser in order {
     let results = try client.records(matching: query, in: browser)
     // results are grouped per profile/store
