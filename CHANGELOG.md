@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Expand the default browser search order to try all supported browsers by default.
+
 ## 0.1.0
 
 Initial release of SweetCookieKit.
