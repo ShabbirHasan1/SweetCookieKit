@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.2 — Unreleased
+- Keychain: add a preflight hook to explain Chromium Safe Storage prompts before the macOS dialog.
+
 ## 0.1.1
 
 - Expand the default browser search order to try all supported browsers by default.

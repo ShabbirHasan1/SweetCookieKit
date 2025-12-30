@@ -327,4 +327,21 @@ public enum BrowserCookieError: LocalizedError, Sendable {
     }
 }
 
+/// Context for a Keychain prompt triggered by Chromium cookie decryption.
+public struct BrowserCookieKeychainPromptContext: Sendable {
+    public let service: String
+    public let account: String
+    public let label: String
+
+    public init(service: String, account: String, label: String) {
+        self.service = service
+        self.account = account
+        self.label = label
+    }
+}
+
+public enum BrowserCookieKeychainPromptHandler {
+    public nonisolated(unsafe) static var handler: ((BrowserCookieKeychainPromptContext) -> Void)?
+}
+
 #endif

@@ -1,6 +1,7 @@
 #if os(macOS)
 import CommonCrypto
 import Foundation
+import LocalAuthentication
 import Security
 import SQLite3
 
@@ -210,9 +211,14 @@ enum ChromeCookieImporter {
             ("Vivaldi Safe Storage", "Vivaldi"),
         ]
 
+        if let context = Self.preflightSafeStoragePrompt(labels: labels) {
+            BrowserCookieKeychainPromptHandler.handler?(context)
+        }
+
         var password: String?
         for label in labels {
-            if let p = Self.findGenericPassword(service: label.service, account: label.account) {
+            let result = Self.findGenericPassword(service: label.service, account: label.account, allowInteraction: true)
+            if let p = result.password {
                 password = p
                 break
             }
@@ -305,20 +311,53 @@ enum ChromeCookieImporter {
         return String(value[i...])
     }
 
-    private static func findGenericPassword(service: String, account: String) -> String? {
-        let query: [CFString: Any] = [
+    private static func preflightSafeStoragePrompt(
+        labels: [(service: String, account: String)]) -> BrowserCookieKeychainPromptContext?
+    {
+        for label in labels {
+            let result = Self.findGenericPassword(
+                service: label.service,
+                account: label.account,
+                allowInteraction: false)
+            switch result.status {
+            case errSecSuccess:
+                if result.password != nil { return nil }
+            case errSecInteractionNotAllowed:
+                return BrowserCookieKeychainPromptContext(
+                    service: label.service,
+                    account: label.account,
+                    label: label.service)
+            default:
+                continue
+            }
+        }
+        return nil
+    }
+
+    private static func findGenericPassword(
+        service: String,
+        account: String,
+        allowInteraction: Bool) -> (status: OSStatus, password: String?)
+    {
+        var query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: service,
             kSecAttrAccount: account,
             kSecMatchLimit: kSecMatchLimitOne,
             kSecReturnData: true,
         ]
+        if !allowInteraction {
+            let context = LAContext()
+            context.interactionNotAllowed = true
+            query[kSecUseAuthenticationContext] = context
+        }
 
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
-        guard status == errSecSuccess else { return nil }
-        guard let data = result as? Data else { return nil }
-        return String(data: data, encoding: .utf8)
+        guard status == errSecSuccess else { return (status, nil) }
+        guard let data = result as? Data else { return (status, nil) }
+        let password = String(data: data, encoding: .utf8)
+        return (status, password)
     }
 
     // MARK: - Profile discovery
