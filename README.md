@@ -1,6 +1,4 @@
-# SweetCookieKit
-
-🧁 SweetCookieKit — Native macOS cookie extraction for Safari, Chromium, and Firefox.
+# 🧁 SweetCookieKit — Native macOS cookie extraction for Safari, Chromium, and Firefox.
 
 SweetCookieKit is a Swift 6 package for extracting browser cookies on macOS.
 It supports Safari, Chromium-based browsers, and Firefox, and provides a modern API
