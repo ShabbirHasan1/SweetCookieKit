@@ -217,7 +217,10 @@ enum ChromeCookieImporter {
 
         var password: String?
         for label in labels {
-            let result = Self.findGenericPassword(service: label.service, account: label.account, allowInteraction: true)
+            let result = Self.findGenericPassword(
+                service: label.service,
+                account: label.account,
+                allowInteraction: true)
             if let p = result.password {
                 password = p
                 break
