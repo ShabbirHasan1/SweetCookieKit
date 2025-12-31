@@ -48,6 +48,16 @@ let records = try client.records(matching: query, in: store!)
 let cookies = try client.cookies(matching: query, in: store!)
 ```
 
+### Read Chromium local storage
+
+```swift
+import SweetCookieKit
+
+let entries = ChromiumLocalStorageReader.readEntries(
+    for: "https://example.com",
+    in: levelDBURL)
+```
+
 ### Query options
 
 ```swift
@@ -74,6 +84,18 @@ See `Examples/CookieCLI` for a standalone SwiftPM executable that lists stores a
 ```bash
 cd Examples/CookieCLI
 swift run SweetCookieCLI --help
+```
+
+## Chromium LevelDB helpers
+
+When you need raw text entries or token candidates from Chromium LevelDB stores,
+use the LevelDB reader helpers (best-effort decoding).
+
+```swift
+import SweetCookieKit
+
+let entries = ChromiumLevelDBReader.readTextEntries(in: levelDBURL)
+let tokens = ChromiumLevelDBReader.readTokenCandidates(in: levelDBURL, minimumLength: 80)
 ```
 
 ## Notes

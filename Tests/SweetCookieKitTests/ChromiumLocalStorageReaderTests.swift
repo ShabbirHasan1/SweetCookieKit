@@ -55,6 +55,49 @@ struct ChromiumLocalStorageReaderTests {
         #expect(entries.first?.key == "pref")
         #expect(entries.first?.value == "value-1")
     }
+
+    @Test
+    func ignoresNonOriginKeysWithoutPrefix() throws {
+        let levelDBURL = try self.makeLevelDBDirectory()
+        let key = self.localStorageKey(storageKey: "not-an-origin", key: "pref", includePrefix: false)
+        let value = self.localStorageValue("value-ignored")
+        try self.writeLog(entries: [(key, value, false)], to: levelDBURL)
+
+        let entries = ChromiumLocalStorageReader.readEntries(
+            for: "https://example.com",
+            in: levelDBURL)
+
+        #expect(entries.isEmpty)
+    }
+
+    @Test
+    func prefersDeletionTombstoneFromLog() throws {
+        let levelDBURL = try self.makeLevelDBDirectory()
+        let key = self.localStorageKey(storageKey: "https://example.com", key: "pref")
+        let value = self.localStorageValue("value-2")
+        try self.writeLog(entries: [(key, value, false), (key, Data(), true)], to: levelDBURL)
+
+        let entries = ChromiumLocalStorageReader.readEntries(
+            for: "https://example.com",
+            in: levelDBURL)
+
+        #expect(entries.isEmpty)
+    }
+
+    @Test
+    func readsTokenCandidatesFromLevelDB() throws {
+        let levelDBURL = try self.makeLevelDBDirectory()
+        let token = String(repeating: "a", count: 25) + "." + String(repeating: "b", count: 25) + ".ccc"
+        let key = self.localStorageKey(storageKey: "https://example.com", key: "pref")
+        let value = Data(token.utf8)
+        try self.writeLog(entries: [(key, value, false)], to: levelDBURL)
+
+        let tokens = ChromiumLevelDBReader.readTokenCandidates(
+            in: levelDBURL,
+            minimumLength: 40)
+
+        #expect(tokens.contains(token))
+    }
 }
 
 extension ChromiumLocalStorageReaderTests {
