@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0 — 2026-01-01
+- Chromium: add Helium support (profiles + keychain labels).
+- Chromium: centralize profile root discovery (new `ChromiumProfileLocator`).
+
 ## 0.1.4 — 2025-12-31
 - Chromium LevelDB: add helper API for raw text entry and token scanning.
 - Tests: expand Snappy + LevelDB table coverage (compressed + raw).
