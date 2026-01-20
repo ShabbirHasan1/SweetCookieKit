@@ -173,7 +173,7 @@ public struct BrowserCookieClient: Sendable {
             } catch {
                 throw BrowserCookieError.loadFailed(
                     browser: store.browser,
-                    details: "Firefox cookie load failed: \(error.localizedDescription)")
+                    details: "\(store.browser.displayName) cookie load failed: \(error.localizedDescription)")
             }
         }
 
