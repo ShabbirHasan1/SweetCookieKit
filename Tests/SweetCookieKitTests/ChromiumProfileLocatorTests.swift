@@ -15,6 +15,7 @@ struct ChromiumProfileLocatorTests {
     func chromiumRelativePath_returnsNilForNonChromium() {
         #expect(ChromiumProfileLocator.chromiumRelativePath(for: .safari) == nil)
         #expect(ChromiumProfileLocator.chromiumRelativePath(for: .firefox) == nil)
+        #expect(ChromiumProfileLocator.chromiumRelativePath(for: .zen) == nil)
     }
 
     @Test

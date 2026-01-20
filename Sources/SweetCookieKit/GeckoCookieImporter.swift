@@ -2,8 +2,8 @@
 import Foundation
 import SQLite3
 
-/// Reads cookies from Firefox profile cookie DBs (macOS).
-enum FirefoxCookieImporter {
+/// Reads cookies from Gecko profile cookie DBs (macOS).
+enum GeckoCookieImporter {
     enum ImportError: LocalizedError {
         case cookieDBNotFound(path: String, browser: Browser)
         case cookieDBNotReadable(path: String, browser: Browser)
@@ -32,18 +32,9 @@ enum FirefoxCookieImporter {
     }
 
     static func availableStores(for browser: Browser, homeDirectories: [URL]) -> [BrowserCookieStore] {
-        let profilesFolder: String
-        let labelPrefix: String
-        switch browser {
-        case .firefox:
-            profilesFolder = "Firefox"
-            labelPrefix = "Firefox"
-        case .zen:
-            profilesFolder = "zen"
-            labelPrefix = "Zen"
-        default:
-            return []
-        }
+        let metadata = BrowserCatalog.metadata(for: browser)
+        guard let profilesFolder = metadata.geckoProfilesFolder else { return [] }
+        let labelPrefix = metadata.displayName
 
         let roots: [URL] = homeDirectories.map { home in
             home
@@ -53,9 +44,9 @@ enum FirefoxCookieImporter {
                 .appendingPathComponent("Profiles")
         }
 
-        var candidates: [FirefoxProfileCandidate] = []
+        var candidates: [GeckoProfileCandidate] = []
         for root in roots {
-            candidates.append(contentsOf: Self.firefoxProfileCookieDBs(
+            candidates.append(contentsOf: Self.geckoProfileCookieDBs(
                 root: root,
                 labelPrefix: labelPrefix,
                 browser: browser))
@@ -82,7 +73,7 @@ enum FirefoxCookieImporter {
                 path: "Missing cookie DB for \(store.label)",
                 browser: store.browser)
         }
-        return try Self.readCookiesFromLockedFirefoxDB(
+        return try Self.readCookiesFromLockedGeckoDB(
             sourceDB: sourceDB,
             matchingDomains: domains,
             domainMatch: domainMatch,
@@ -91,7 +82,7 @@ enum FirefoxCookieImporter {
 
     // MARK: - DB copy helper
 
-    private static func readCookiesFromLockedFirefoxDB(
+    private static func readCookiesFromLockedGeckoDB(
         sourceDB: URL,
         matchingDomains: [String],
         domainMatch: BrowserCookieDomainMatch,
@@ -102,7 +93,7 @@ enum FirefoxCookieImporter {
         }
 
         let tempDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("sweet-cookie-kit-firefox-cookies-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("sweet-cookie-kit-gecko-cookies-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
 
         let copiedDB = tempDir.appendingPathComponent("cookies.sqlite")
@@ -190,17 +181,17 @@ enum FirefoxCookieImporter {
 
     // MARK: - Profile discovery
 
-    private struct FirefoxProfileCandidate: Sendable {
+    private struct GeckoProfileCandidate: Sendable {
         let browser: Browser
         let profile: BrowserProfile
         let label: String
         let cookiesDB: URL
     }
 
-    private static func firefoxProfileCookieDBs(
+    private static func geckoProfileCookieDBs(
         root: URL,
         labelPrefix: String,
-        browser: Browser) -> [FirefoxProfileCandidate]
+        browser: Browser) -> [GeckoProfileCandidate]
     {
         guard let entries = try? FileManager.default.contentsOfDirectory(
             at: root,
@@ -226,7 +217,7 @@ enum FirefoxCookieImporter {
             let profile = BrowserProfile(id: dir.path, name: profileName)
             let label = "\(labelPrefix) \(profileName)"
             let cookiesDB = dir.appendingPathComponent("cookies.sqlite")
-            return FirefoxProfileCandidate(browser: browser, profile: profile, label: label, cookiesDB: cookiesDB)
+            return GeckoProfileCandidate(browser: browser, profile: profile, label: label, cookiesDB: cookiesDB)
         }
     }
 

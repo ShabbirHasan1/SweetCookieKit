@@ -44,8 +44,8 @@ public struct BrowserCookieClient: Sendable {
             return ChromeCookieImporter.availableStores(
                 for: browser,
                 homeDirectories: self.configuration.homeDirectories)
-        case .firefox:
-            return FirefoxCookieImporter.availableStores(for: browser, homeDirectories: self.configuration.homeDirectories)
+        case .gecko:
+            return GeckoCookieImporter.availableStores(for: browser, homeDirectories: self.configuration.homeDirectories)
         }
     }
 
@@ -152,9 +152,9 @@ public struct BrowserCookieClient: Sendable {
                     browser: store.browser,
                     details: "\(store.browser.displayName) cookie load failed: \(error.localizedDescription)")
             }
-        case .firefox:
+        case .gecko:
             do {
-                let loaded = try FirefoxCookieImporter.loadCookies(
+                let loaded = try GeckoCookieImporter.loadCookies(
                     from: store,
                     matchingDomains: query.domains,
                     domainMatch: query.domainMatch)
@@ -168,8 +168,8 @@ public struct BrowserCookieClient: Sendable {
                         isSecure: record.isSecure,
                         isHTTPOnly: record.isHTTPOnly)
                 }
-            } catch let error as FirefoxCookieImporter.ImportError {
-                throw BrowserCookieError.mapFirefoxError(error, browser: store.browser)
+            } catch let error as GeckoCookieImporter.ImportError {
+                throw BrowserCookieError.mapGeckoError(error, browser: store.browser)
             } catch {
                 throw BrowserCookieError.loadFailed(
                     browser: store.browser,
@@ -365,7 +365,7 @@ extension BrowserCookieError {
         }
     }
 
-    static func mapFirefoxError(_ error: FirefoxCookieImporter.ImportError, browser: Browser) -> BrowserCookieError {
+    static func mapGeckoError(_ error: GeckoCookieImporter.ImportError, browser: Browser) -> BrowserCookieError {
         switch error {
         case .cookieDBNotFound:
             BrowserCookieError.notFound(browser: browser, details: error.localizedDescription)

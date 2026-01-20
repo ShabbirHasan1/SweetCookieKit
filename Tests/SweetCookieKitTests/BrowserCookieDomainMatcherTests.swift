@@ -107,11 +107,11 @@ struct BrowserCookieDomainMatcherTests {
         let chromeIsAccessDenied = if case .accessDenied = chrome { true } else { false }
         #expect(chromeIsAccessDenied)
 
-        let firefox = BrowserCookieError.mapFirefoxError(
+        let gecko = BrowserCookieError.mapGeckoError(
             .cookieDBNotFound(path: "x", browser: .firefox),
             browser: .firefox)
-        let firefoxIsNotFound = if case .notFound = firefox { true } else { false }
-        #expect(firefoxIsNotFound)
+        let geckoIsNotFound = if case .notFound = gecko { true } else { false }
+        #expect(geckoIsNotFound)
     }
 }
 

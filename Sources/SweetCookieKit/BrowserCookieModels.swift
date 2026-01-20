@@ -30,71 +30,22 @@ public enum Browser: String, Sendable, Hashable, CaseIterable {
 
     /// Display name for UI or logs.
     public var displayName: String {
-        switch self {
-        case .safari: "Safari"
-        case .chrome: "Chrome"
-        case .chromeBeta: "Chrome Beta"
-        case .chromeCanary: "Chrome Canary"
-        case .arc: "Arc"
-        case .arcBeta: "Arc Beta"
-        case .arcCanary: "Arc Canary"
-        case .chatgptAtlas: "ChatGPT Atlas"
-        case .chromium: "Chromium"
-        case .firefox: "Firefox"
-        case .zen: "Zen"
-        case .brave: "Brave"
-        case .braveBeta: "Brave Beta"
-        case .braveNightly: "Brave Nightly"
-        case .edge: "Microsoft Edge"
-        case .edgeBeta: "Microsoft Edge Beta"
-        case .edgeCanary: "Microsoft Edge Canary"
-        case .helium: "Helium"
-        case .vivaldi: "Vivaldi"
-        case .dia: "Dia"
-        }
+        BrowserCatalog.metadata(for: self).displayName
     }
 
     /// Preferred order to search for cookies when no user preference exists.
     /// Try all supported browsers by default; callers can pass a smaller list.
-    public static let defaultImportOrder: [Browser] = [
-        .safari,
-        .chrome,
-        .edge,
-        .brave,
-        .arc,
-        .dia,
-        .chatgptAtlas,
-        .chromium,
-        .helium,
-        .vivaldi,
-        .firefox,
-        .zen,
-        .chromeBeta,
-        .chromeCanary,
-        .arcBeta,
-        .arcCanary,
-        .braveBeta,
-        .braveNightly,
-        .edgeBeta,
-        .edgeCanary,
-    ]
+    public static let defaultImportOrder: [Browser] = BrowserCatalog.defaultImportOrder
 
     var engine: BrowserEngine {
-        switch self {
-        case .safari:
-            .webkit
-        case .firefox, .zen:
-            .firefox
-        default:
-            .chromium
-        }
+        BrowserCatalog.metadata(for: self).engine
     }
 }
 
 enum BrowserEngine: Sendable {
     case webkit
     case chromium
-    case firefox
+    case gecko
 }
 
 /// Defaults for browser selection.
@@ -142,44 +93,7 @@ public enum ChromiumProfileLocator {
     }
 
     static func chromiumRelativePath(for browser: Browser) -> String? {
-        switch browser {
-        case .chrome:
-            "Google/Chrome"
-        case .chromeBeta:
-            "Google/Chrome Beta"
-        case .chromeCanary:
-            "Google/Chrome Canary"
-        case .arc:
-            "Arc/User Data"
-        case .arcBeta:
-            "Arc Beta/User Data"
-        case .arcCanary:
-            "Arc Canary/User Data"
-        case .chatgptAtlas:
-            "com.openai.atlas/browser-data/host"
-        case .chromium:
-            "Chromium"
-        case .helium:
-            "net.imput.helium"
-        case .brave:
-            "BraveSoftware/Brave-Browser"
-        case .braveBeta:
-            "BraveSoftware/Brave-Browser-Beta"
-        case .braveNightly:
-            "BraveSoftware/Brave-Browser-Nightly"
-        case .edge:
-            "Microsoft Edge"
-        case .edgeBeta:
-            "Microsoft Edge Beta"
-        case .edgeCanary:
-            "Microsoft Edge Canary"
-        case .vivaldi:
-            "Vivaldi"
-        case .dia:
-            "Dia/User Data"
-        case .safari, .firefox, .zen:
-            nil
-        }
+        BrowserCatalog.metadata(for: browser).chromiumProfileRelativePath
     }
 
     private static func uniqueHomes(_ homes: [URL]) -> [URL] {
