@@ -52,6 +52,31 @@ struct BrowserCatalogTests {
         #expect(labels.contains("Dia Safe Storage|Dia"))
         #expect(labels.contains("ChatGPT Atlas Safe Storage|ChatGPT Atlas"))
     }
+
+    @Test
+    func appBundleName_overridesForKnownBrowsers() {
+        #expect(Browser.chrome.appBundleName == "Google Chrome")
+        #expect(Browser.chromeBeta.appBundleName == "Google Chrome Beta")
+        #expect(Browser.chromeCanary.appBundleName == "Google Chrome Canary")
+        #expect(Browser.brave.appBundleName == "Brave Browser")
+        #expect(Browser.braveNightly.appBundleName == "Brave Browser Nightly")
+        #expect(Browser.safari.appBundleName == "Safari")
+    }
+
+    @Test
+    func browserMetadata_helpersExposeProfileRoots() {
+        #expect(Browser.chrome.chromiumProfileRelativePath == "Google/Chrome")
+        #expect(Browser.firefox.geckoProfilesFolder == "Firefox")
+        #expect(Browser.zen.geckoProfilesFolder == "zen")
+        #expect(Browser.safari.chromiumProfileRelativePath == nil)
+    }
+
+    @Test
+    func browserMetadata_helpersExposeSafeStorageLabels() {
+        let chromeLabels = Browser.chrome.safeStorageLabels.map { "\($0.service)|\($0.account)" }
+        #expect(chromeLabels.contains("Chrome Safe Storage|Chrome"))
+        #expect(Browser.safari.safeStorageLabels.isEmpty)
+    }
 }
 
 #endif

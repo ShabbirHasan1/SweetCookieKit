@@ -1,7 +1,8 @@
 # Changelog
 
-## 0.3.1 — 2026-01-20
+## 0.4.0 — 2026-01-20
 - Export browser metadata helpers for host app detection (bundle names, profile roots, Safe Storage labels).
+- Tests: cover browser metadata helper accessors and bundle name overrides.
 
 ## 0.3.0 — 2026-01-20
 - Firefox: add Zen browser support. (#3, thanks @vnixx)
