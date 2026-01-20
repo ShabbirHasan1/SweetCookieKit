@@ -38,6 +38,20 @@ struct BrowserCatalogTests {
             #expect(folder != nil)
         }
     }
+
+    @Test
+    func geckoProfilesFolder_expectedNames() {
+        #expect(BrowserCatalog.metadata(for: .firefox).geckoProfilesFolder == "Firefox")
+        #expect(BrowserCatalog.metadata(for: .zen).geckoProfilesFolder == "zen")
+    }
+
+    @Test
+    func safeStorageLabels_includeKnownServices() {
+        let labels = BrowserCatalog.safeStorageLabels.map { "\($0.service)|\($0.account)" }
+        #expect(labels.contains("Chrome Safe Storage|Chrome"))
+        #expect(labels.contains("Dia Safe Storage|Dia"))
+        #expect(labels.contains("ChatGPT Atlas Safe Storage|ChatGPT Atlas"))
+    }
 }
 
 #endif

@@ -19,6 +19,11 @@ struct ChromiumProfileLocatorTests {
     }
 
     @Test
+    func chromiumRelativePath_mapsDia() {
+        #expect(ChromiumProfileLocator.chromiumRelativePath(for: .dia) == "Dia/User Data")
+    }
+
+    @Test
     func roots_dedupesHomesAndBuildsExpectedPaths() {
         let home = URL(fileURLWithPath: "/Users/test")
         let roots = ChromiumProfileLocator.roots(
